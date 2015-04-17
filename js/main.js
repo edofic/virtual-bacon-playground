@@ -3,6 +3,7 @@ var diff = require('virtual-dom/diff');
 var patch = require('virtual-dom/patch');
 var createElement = require('virtual-dom/create-element');
 var Bacon = require('baconjs');
+window.Bacon = Bacon;
 
 // model
 var streamCount = Bacon
@@ -22,7 +23,7 @@ var streamTree = streamCount.map(function (count) {
     }, [String(count)]);
 });
 
-
+/*
 // wiring
 streamTree.scan({}, function(state, cur) {
   var prev = state.prev;
@@ -36,4 +37,28 @@ streamTree.scan({}, function(state, cur) {
   return {prev: cur, root: root};
 }).forEach(function(state) {
   // consume
+});
+*/
+
+var latestTree = undefined;
+var root = undefined;
+var inProgress = false;
+streamTree.forEach(function (tree) {
+  if (inProgress) {
+    return;
+  }
+  if (root == undefined || latestTree == undefined) {
+    root = createElement(tree);
+    document.body.appendChild(root);
+    latestTree = tree;
+    return;
+  }
+  inProgress = true;
+  var patches = diff(latestTree, tree);
+  requestAnimationFrame(function() {
+    latestTree = tree;
+    inProgress = false;
+    root = patch(root, patches);
+  });
+  dirty = true;
 });
