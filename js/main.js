@@ -4,7 +4,6 @@ var wiring = require('./wiring.js');
 
 window.Bacon = Bacon; // for playing around in browser console
 
-
 // model
 var clicks = new Bacon.Bus();
 var streamCount = clicks
@@ -41,8 +40,28 @@ var echoer = textInput.map(function(textInputValue){
     return h('div', [input, txt])
 });
 
-var streamTree = Bacon.combineWith(function(clicker, echoer) {
-  return h('div', [clicker, echoer]);
-}, clicker, echoer);
 
-wiring.wire(streamTree);
+var screen1 = Bacon.combineWith(function(clicker, echoer) {
+  return h('div', [clicker, echoer]);
+}, clicker, echoer).toProperty();
+
+var screen2 = Bacon.constant(h('div', "foo")).toProperty();
+
+var screenPicker = new Bacon.Bus();
+
+var head = Bacon.constant(h('div', 
+    [h('select', {
+      'ev-input': function(ev) {
+        screenPicker.push(ev.target.value)
+      }
+    }, [h('option', "s1"), h('option', 's2')])]));
+
+var screen = Bacon.combineWith(function(pick, s1, s2) {
+  return pick == "s1" ? s1 : s2
+}, screenPicker.startWith("s1"), screen1, screen2);
+
+var tree = Bacon.combineWith(function(head, screen) {
+  return h('div', [head, screen]);
+}, head, screen);
+
+wiring.wire(tree);
