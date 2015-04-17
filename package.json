@@ -3,6 +3,7 @@
   "devDependencies": {
     "baconjs": "~0.7",
     "virtual-dom": "~2.0",
+    "dom-delegator": "~13.0",
     "browserify": "~9.0"
   }
 }
