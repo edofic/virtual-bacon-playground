@@ -25,6 +25,7 @@ module.exports.wire = function (streamTree) {
     requestAnimationFrame(function() {
       inProgress = false;
       root = patch(root, diff(latestTree, nextTree));
+      latestTree = nextTree;
     });
   });
   return unsub;
