@@ -2,13 +2,12 @@ var h = require('virtual-dom/h');
 var diff = require('virtual-dom/diff');
 var patch = require('virtual-dom/patch');
 var createElement = require('virtual-dom/create-element');
-var Bacon = require('baconjs');
-window.Bacon = Bacon;
+var kefir = require('kefir');
 
 // model
-var streamCount = Bacon
+var streamCount = kefir
   .repeatedly(0, [1])
-  .scan(0, function(count, step) { return (count + step) % 200 });
+  .scan(function(count, step) { return (count + step) % 200 }, 0);
 
 // view
 var streamTree = streamCount.map(function (count) {
@@ -27,7 +26,7 @@ var streamTree = streamCount.map(function (count) {
 
 function wireDumb(streamTree) {
   var rr;
-  var unsub = streamTree.scan({}, function(state, cur) {
+  var unsub = streamTree.scan(function(state, cur) {
     var prev = state.prev;
     var root = state.root;
     if (prev == undefined || root == undefined) {
@@ -38,7 +37,7 @@ function wireDumb(streamTree) {
       root = patch(root, diff(prev, cur));
     }
     return {prev: cur, root: root};
-  }).forEach(function(state) {
+  }, {}).onValue(function(state) {
     // consume
   });
   return function() {
@@ -51,7 +50,7 @@ function wireRAF(streamTree) {
   var latestTree = undefined;
   var root = undefined;
   var inProgress = false;
-  var unsub = streamTree.forEach(function (tree) {
+  var unsub = streamTree.onValue(function (tree) {
     if (inProgress) {
       return;
     }
@@ -102,7 +101,7 @@ document.body.appendChild(btn);
 
 
 var count = 0;
-streamTree.forEach(function(){
+streamTree.onValue(function(){
   count += 1;
 })
 setInterval(function() {
