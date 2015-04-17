@@ -1,11 +1,8 @@
 var h = require('virtual-dom/h');
-var diff = require('virtual-dom/diff');
-var patch = require('virtual-dom/patch');
-var createElement = require('virtual-dom/create-element');
 var Bacon = require('baconjs');
-var Delegator = require('dom-delegator')
-window.Bacon = Bacon;
-window.Delegator = Delegator;
+var wiring = require('./wiring.js');
+
+window.Bacon = Bacon; // for playing around in browser console
 
 
 // model
@@ -48,28 +45,4 @@ var streamTree = Bacon.combineWith(function(clicker, echoer) {
   return h('div', [clicker, echoer]);
 }, clicker, echoer);
 
-
-//wiring
-var latestTree = undefined;
-var nextTree = undefined;
-var root = undefined;
-var inProgress = false;
-var unsub = streamTree.forEach(function (tree) {
-  nextTree = tree;
-  if (inProgress) {
-    return;
-  }
-  if (root == undefined || latestTree == undefined) {
-    root = createElement(tree);
-    document.body.appendChild(root);
-    latestTree = tree;
-    return;
-  }
-  inProgress = true;
-  requestAnimationFrame(function() {
-    inProgress = false;
-    root = patch(root, diff(latestTree, nextTree));
-  });
-});
-
-var delegator = Delegator();
+wiring.wire(streamTree);
